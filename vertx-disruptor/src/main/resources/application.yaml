@@ -1,0 +1,11 @@
+version: "1.0"
+
+db:
+  host: "localhost"
+  port: 5432
+  database: "broker"
+  user: "postgres"
+  password: "secret"
+
+
+
