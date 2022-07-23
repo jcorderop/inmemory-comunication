@@ -11,9 +11,7 @@ import org.junit.jupiter.api.Test;
 @Slf4j
 class DisruptorOnlyJavaTest {
 
-    private static final Long ORDERS = 100000000L;
-    //@Autowired
-    ;
+    private static final Long ORDERS = 10000000L;
 
     @Test
     void processNewOrder() {
@@ -26,10 +24,10 @@ class DisruptorOnlyJavaTest {
 
 
         for (int i = 1; i <= ORDERS; i++) {
-            Long orderId = 1000000000L+i;
+            long orderId = 1000000000L+i;
             //log.info("{}",orderId);
             orderService.processNewOrder(orderId);
-        };
+        }
 
     }
 

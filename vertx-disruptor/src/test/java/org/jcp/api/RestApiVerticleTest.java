@@ -13,16 +13,14 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import lombok.extern.slf4j.Slf4j;
 import org.jcp.vertx.VertxComponent;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Slf4j
 @ExtendWith(VertxExtension.class)
@@ -36,14 +34,14 @@ class RestApiVerticleTest extends AbstractRestApiTest {
 
     @Test
     void test_orders(Vertx vertx, VertxTestContext testContext){
-        Long ORDERS = 1000000L;
+        long ORDERS = 10L;
         AtomicLong counter = new AtomicLong(1);
 
         for (int i = 0; i < ORDERS; i++) {
             counter.addAndGet(1);
             Long orderId = 1000000000L+i;
             vertx.eventBus().publish(TOPIC_ORDER_NEW, orderId);
-        };
+        }
 
         //when
 

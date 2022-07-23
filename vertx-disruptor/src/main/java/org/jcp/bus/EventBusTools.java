@@ -1,6 +1,9 @@
 package org.jcp.bus;
 
-import io.vertx.core.*;
+import io.vertx.core.Handler;
+import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
+import io.vertx.core.VertxOptions;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
@@ -45,6 +48,7 @@ public class EventBusTools {
     }
 
     public static void getBusMetrics(Vertx vertx) {
+        //-Dvertx.metrics.options.enabled=true
         MetricsService metricsService = MetricsService.create(vertx);
 
         JsonObject metricsBus = metricsService.getMetricsSnapshot(vertx.eventBus());
@@ -87,12 +91,12 @@ public class EventBusTools {
 
     private static void publishEvents(Vertx vertx, Function<Long, Object> messageToSend) {
         log.info("Publishing executeBlocking on " + Thread.currentThread().getName());
-        final long publishThrottleInms = 50;
+        final long publishThrottleInms = 10;
         long next = System.nanoTime()+publishThrottleInms;
         for (int i = 0; i <= EventBusTools.ORDERS_TO_CREATE+EventBusTools.shift; i++) {
             vertx.eventBus().send(EventBusTools.TOPIC_ORDER_NEW,
                     messageToSend.apply(EventBusTools.ORDER_ID_INIT+i),
-                    new DeliveryOptions().setLocalOnly(true));
+                    new DeliveryOptions().setLocalOnly(false));
             while (next >= System.nanoTime()) {
             }
             next = System.nanoTime()+publishThrottleInms;
@@ -106,16 +110,17 @@ public class EventBusTools {
         return promise -> {
             log.info("Working executeBlocking on " + Thread.currentThread().getName());
             final AtomicLong startLatency = new AtomicLong(-1);
-            final AtomicLong incommingOrderId = new AtomicLong(0);
+            final AtomicLong incomingOrderId = new AtomicLong(0);
             vertx.eventBus().consumer(EventBusTools.TOPIC_ORDER_NEW, message -> {
                 deserializationFunc.apply(message);
-                final long event = incommingOrderId.addAndGet(1);
+                final long event = incomingOrderId.addAndGet(1);
                 if (startLatency.get() == -1)
                     startLatency.set(System.nanoTime());
                 if (event % EventBusTools.snapshotCounter == 0) {
-                    System.out.println("Received message on " + Thread.currentThread().getName());
-                    System.out.println("events: "+EventBusTools.snapshotCounter+" - Latency ms: "+ (System.nanoTime() - startLatency.get())/1000000);
-                    System.out.println("Last event Id " + event);
+                    System.out.println(Thread.currentThread().getName() +
+                                ", Last event Id " + event +
+                                ", N. events: "+EventBusTools.snapshotCounter +
+                                ", Latency ms: " + (System.nanoTime() - startLatency.get())/1000000);
                     startLatency.set(System.nanoTime());
                     if (EventBusTools.isMonitoringActive) {
                         EventBusTools.getBusMetrics(vertx);
